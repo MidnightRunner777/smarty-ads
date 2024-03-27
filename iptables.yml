@@ -9,48 +9,52 @@
     - name: Flush rules
       ansible.builtin.iptables:
         flush: yes
-  
-  # Add role for monitoring
+
     - name: Allow monitoring ports
       ansible.builtin.iptables:
         chain: INPUT
         protocol: tcp
-        destination_port: "8082,8345,5252"
+        destination_port: 8082,8345,5252
+        match: multiport  
         source: "{{ item }}"
         jump: ACCEPT
       loop: "{{ monitoring_ips }}"
- 
+
   # Add role for ssh 
     - name: Allow ssh ports
       ansible.builtin.iptables:
         chain: INPUT
         protocol: tcp
-        destination_port: "22,2244"
+        destination_port: 22,2244
+        match: multiport
         source: "{{ item }}"
         jump: ACCEPT
-      loop: "{{ ssh_protect }}"
+      loop: "{{ ssh_protect_ips }}"
 
   # Add role for app
     - name: Allow app ports
       ansible.builtin.iptables:
         chain: INPUT
         protocol: tcp
-        destination_port: "6073,8080,4670"
+        destination_port: 6073,8080,4670
+        match: multiport
         source: "{{ item }}"
         jump: ACCEPT
-      loop: "{{ app_protect }}"
+      loop: "{{ app_protect_ips }}"
 
   # Drop or reject role
     - name: Reject all other traffic
       ansible.builtin.iptables:
         chain: INPUT
         protocol: tcp
-        destination_port: "8082,8345,5252,6073,8080,4670"
+        destination_port: 8082,8345,5252,6073,8080,4670
+        match: multiport
         jump: REJECT
 
     - name: Drop all other traffic
       ansible.builtin.iptables:
         chain: INPUT
         protocol: tcp
-        destination_port: "22,2244"
+        destination_port: 22,2244
+        match: multiport
         jump: DROP
