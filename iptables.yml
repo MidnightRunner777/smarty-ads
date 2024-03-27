@@ -1,11 +1,17 @@
 - name: Setup iptables for SSH access control
   hosts: test-dev
+  gather_facts: yes
   become: yes
   vars_files:
     - vars/monitoring.yml
     - vars/ssh.yml
     - vars/app.yml
   tasks:
+    - name: Check if the OS is Ubuntu
+      fail:
+        msg: "This playbook can only be run on Ubuntu."
+      when: ansible_distribution != 'Ubuntu'
+
     - name: Flush rules
       ansible.builtin.iptables:
         flush: yes
