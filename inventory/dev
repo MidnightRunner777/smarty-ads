@@ -1,0 +1,7 @@
+all:
+  hosts:
+  children:
+    test-dev:
+      hosts:
+        dev:
+          ansible_host: "1.1.1.1"

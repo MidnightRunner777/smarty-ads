@@ -1,0 +1,56 @@
+- name: Setup iptables for SSH access control
+  hosts: test-dev
+  become: yes
+  vars_files:
+    - vars/monitoring.yml
+    - vars/ssh.yml
+    - vars/app.yml
+  tasks:
+    - name: Flush rules
+      ansible.builtin.iptables:
+        flush: yes
+  
+  # Add role for monitoring
+    - name: Allow monitoring ports
+      ansible.builtin.iptables:
+        chain: INPUT
+        protocol: tcp
+        destination_port: "8082,8345,5252"
+        source: "{{ item }}"
+        jump: ACCEPT
+      loop: "{{ monitoring_ips }}"
+ 
+  # Add role for ssh 
+    - name: Allow ssh ports
+      ansible.builtin.iptables:
+        chain: INPUT
+        protocol: tcp
+        destination_port: "22,2244"
+        source: "{{ item }}"
+        jump: ACCEPT
+      loop: "{{ ssh_protect }}"
+
+  # Add role for app
+    - name: Allow app ports
+      ansible.builtin.iptables:
+        chain: INPUT
+        protocol: tcp
+        destination_port: "6073,8080,4670"
+        source: "{{ item }}"
+        jump: ACCEPT
+      loop: "{{ app_protect }}"
+
+  # Drop or reject role
+    - name: Reject all other traffic
+      ansible.builtin.iptables:
+        chain: INPUT
+        protocol: tcp
+        destination_port: "8082,8345,5252,6073,8080,4670"
+        jump: REJECT
+
+    - name: Drop all other traffic
+      ansible.builtin.iptables:
+        chain: INPUT
+        protocol: tcp
+        destination_port: "22,2244"
+        jump: DROP
